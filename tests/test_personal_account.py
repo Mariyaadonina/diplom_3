@@ -1,36 +1,44 @@
 import allure
+from pages.login_page import LoginPage
+from pages.main_page import MainPage
+from pages.personal_account_page import PersonalAccountPage
+from config import PERSONAL_ACCOUNT_PAGE, ORDER_HISTORY_PAGE, LOGIN_PAGE
 
-
-@allure.suite('Личный кабинет')
 class TestPersonalAccount:
 
-    @allure.title('Переход в личный кабинет')
-    @allure.description('Проверка перехода по клику на «Личный кабинет»')
-    def test_navigate_to_personal_account(self, login_user, header, account_page):
-        header.click_account_button()
-        account_page.wait_loading_page()
-        with allure.step(f'Проверяем переход на url {header.current_url})'):
-            assert header.current_url == account_page.URL, \
-                (f'Ожидался переход на страницу {account_page.URL}, '
-                 f'но фактический URL: {header.current_url}')
+    @allure.title('переход по клику на «Личный кабинет»')
+    def test_transfer_to_personal_account(self, driver, create_user_and_get_creds):
+        main_page = MainPage(driver)
+        main_page.click_on_login_button()
+        login_page = LoginPage(driver)
+        login_page.input_email_and_password(create_user_and_get_creds)
+        login_page.click_on_login_button()
+        main_page.wait_page_to_be_loaded()
+        current_url = main_page.click_on_personal_account_button()
+        assert current_url == PERSONAL_ACCOUNT_PAGE
 
-    @allure.title('Переход в раздел «История заказов»')
-    @allure.description('Проверка перехода в раздел «История заказов»')
-    def test_navigate_to_order_history(self, login_user, header, account_page, orders_history_page):
-        header.click_account_button()
-        account_page.click_link_order_history()
-        with allure.step(f'Проверяем переход на url {account_page.current_url})'):
-            assert account_page.current_url == orders_history_page.URL, \
-                (f'Ожидался переход на страницу {orders_history_page.URL}, '
-                 f'но фактический URL: {account_page.current_url}')
+    @allure.title('переход в раздел «История заказов»')
+    def test_go_to_order_history(self, driver, create_user_and_get_creds):
+        main_page = MainPage(driver)
+        main_page.click_on_login_button()
+        login_page = LoginPage(driver)
+        login_page.input_email_and_password(create_user_and_get_creds)
+        login_page.click_on_login_button()
+        main_page.wait_page_to_be_loaded()
+        main_page.click_on_personal_account_button()
+        personal_account = PersonalAccountPage(driver)
+        current_url = personal_account.click_on_order_history()
+        assert current_url == ORDER_HISTORY_PAGE
 
-    @allure.title('Выход из аккаунта')
-    @allure.description('Проверка выхода из аккаунта')
-    def test_logout(self, login_user, login_page, header, account_page):
-        header.click_account_button()
-        account_page.click_button_exit()
-        login_page.wait_loading_page()
-        with allure.step(f'Проверяем переход на url  {account_page.current_url})'):
-            assert account_page.current_url == login_page.URL, \
-                (f'Ожидался переход на страницу {login_page.URL}, '
-                 f'но фактический URL: {account_page.current_url}')
+    @allure.title('выход из аккаунта')
+    def test_log_out_of_account(self, driver, create_user_and_get_creds):
+        main_page = MainPage(driver)
+        main_page.click_on_login_button()
+        login_page = LoginPage(driver)
+        login_page.input_email_and_password(create_user_and_get_creds)
+        login_page.click_on_login_button()
+        main_page.wait_page_to_be_loaded()
+        main_page.click_on_personal_account_button()
+        personal_account = PersonalAccountPage(driver)
+        current_url = personal_account.click_on_log_out_from_acc()
+        assert current_url == LOGIN_PAGE

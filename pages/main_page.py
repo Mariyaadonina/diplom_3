@@ -1,65 +1,83 @@
 import allure
-
-from data import URLs
-from locators.main_page_locators import MainPageLocators
 from pages.base_page import BasePage
-
+from locators.main_page_locators import MainPageLocators
+from config import PERSONAL_ACCOUNT_PAGE, ORDER_FEED_PAGE, MAIN_PAGE
 
 class MainPage(BasePage):
-    def __init__(self, web_drv):
-        super().__init__(web_drv)
-        self.URL = URLs.MAIN_PAGE
 
-    @allure.step('Открываем главную страницу')
-    def open_main_page(self):
-        self.open_page(URLs.MAIN_PAGE)
-        self.wait_visibility(MainPageLocators.LIST_OF_INGREDIENTS)
+    @allure.title('Клик на кнопку Войти в аккаунт')
+    def click_on_login_button(self):
+        login_button = self.find_element_with_wait(MainPageLocators.LOGIN_BUTTON)
+        self.click_on_element_js(login_button)
 
-    @allure.step('Выбираем ингредиент')
-    def click_on_ingredient_(self, index):
-        ingredients = self.get_visible_elements(MainPageLocators.LIST_OF_INGREDIENTS)
-        ingredients[index].click()
+    def wait_page_to_be_loaded(self):
+        self.find_element_with_wait(MainPageLocators.BUTTON_CREATE_ORDER)
 
-    @allure.step('Закрываем всплывающее окно')
-    def click_cross_button_in_popup_window(self):
-        self.click_element(MainPageLocators.CLOSE_POPUP_WINDOW_BUTTON)
+    @allure.step("Клик на кнопку -> Личный кабинет")
+    def click_on_personal_account_button(self):
+        personal_account_button = self.find_element_with_wait(MainPageLocators.PERSONAL_ACCOUNT_BUTTON)
+        self.click_on_element_js(personal_account_button)
+        self.wait_url_to_be(PERSONAL_ACCOUNT_PAGE)
+        return self.current_url()
 
-    @allure.step('Добавляем ингредиент в заказ')
-    def add_ingredient_to_order(self, index):
-        ingredients = self.get_visible_elements(MainPageLocators.LIST_OF_INGREDIENTS)
-        basket = self.get_visible_element(MainPageLocators.BURGER_CONSTRUCTOR_BASKET)
-        self.drag_and_drop(ingredients[index], basket)
+    @allure.title('Клик на кнопку конструктор')
+    def click_on_constructor_button(self):
+        constructor_button = self.find_element_with_wait(MainPageLocators.CONSTRUCTOR_BUTTON)
+        self.click_on_element_js(constructor_button)
 
-    @allure.step('Кликаем на кнопку оформления заказа')
-    def click_place_order_button(self):
-        self.click_element(MainPageLocators.PLACE_ORDER_BUTTON)
+    @allure.title('Клик на кнопку "лента заказов"')
+    def click_on_order_feed_button(self):
+        order_feed = self.find_element_with_wait(MainPageLocators.ORDER_FEED_BUTTON)
+        self.click_on_element_js(order_feed)
+        self.wait_url_to_be(ORDER_FEED_PAGE)
+        return self.current_url()
 
-    @allure.step('Получаем название ингредиента')
-    def get_ingredient_name_by_index_(self, index):
-        ingredients = self.get_visible_elements(MainPageLocators.LIST_OF_INGREDIENTS)
-        return ingredients[index].text.split('\n')[2]
+    @allure.title('клик на ингредиент Флюоресцентная булочка R2-D3')
+    def click_on_ingredient(self):
+        ingredient = self.find_element_with_wait(MainPageLocators.INGREDIENT)
+        self.click_on_element_js(ingredient)
 
-    @allure.step('Получаем название ингредиента в окне с деталями')
-    def get_ingredient_name_in_details_window(self):
-        return self.get_visible_element(MainPageLocators.INGREDIENT_NAME_IN_DETAILS_WINDOW).text
+    @allure.title('Проверка видимости окна деталей ингредиент')
+    def ingredient_details_window_is_visible(self):
+        title_modal_window = self.find_element_with_wait(MainPageLocators.TITLE_MODAL_INGREDIENT)
+        return title_modal_window.is_displayed()
 
-    @allure.step('Получаем текст из окна подтверждения заказа')
-    def get_order_status(self):
-        return self.get_visible_element(MainPageLocators.ORDER_STATUS_START_TO_PREPARE).text
+    @allure.title('Закрытие модального окна после нажатия на крестик')
+    def close_modal_window_ingredient(self):
+        close_modal = self.find_element_with_wait(MainPageLocators.CLOSE_MODAL_WINDOW)
+        self.click_on_element_js(close_modal)
+        modal_element = self.find_element_with_wait(MainPageLocators.MODAL_ELEMENT)
+        return 'Modal_modal_opened__3ISw4' not in modal_element.get_attribute('class')
 
-    @allure.step('Получаем номер заказа из окна подтверждения заказа')
-    def get_order_number_from_confirm_popup(self):
-        return f'0{self.get_element(MainPageLocators.ORDER_NUMBER_IN_POPUP_WINDOW).text}'
+    @allure.step("Перемещение ингредиента в корзину")
+    def move_ingredient_to_order(self):
+        source = self.find_element_with_wait(MainPageLocators.INGREDIENT)
+        target = self.find_element_with_wait(MainPageLocators.BASKET)
+        self.move_elements(source, target)
 
-    @allure.step('Получаем всплывающее окно с деталями ингредиента')
-    def get_popup_details_window(self):
-        return self.get_visible_element(MainPageLocators.POPUP_WINDOW)
+    @allure.step("Проверка увеличения счетчика ингредиента")
+    def is_ingredient_counter_increased(self):
+        self.find_element_with_wait(MainPageLocators.COUNTER_INGREDIENT)
+        counter_text = self.get_text_from_element(MainPageLocators.INGREDIENT)
+        return counter_text != '0'
 
-    @allure.step('Проверяем наличие всплывающего окна с деталями ингредиента')
-    def find_popup_window(self):
-        return self.is_element_exist(MainPageLocators.POPUP_WINDOW)
+    @allure.title('клик на кнопку Оформить заказ')
+    def click_on_button_create_order(self):
+        create_order = self.find_element_with_wait(MainPageLocators.BUTTON_CREATE_ORDER)
+        self.click_on_element_js(create_order)
 
-    @allure.step('Получаем значение счетчика ингредиента')
-    def get_ingredients_counter_(self, index):
-        counters = self.get_visible_elements(MainPageLocators.INGREDIENTS_COUNTERS)
-        return int(counters[index].text)
+    @allure.title('Проверка видимости окна создания заказа')
+    def order_window_is_visible(self):
+        title_modal_window = self.find_element_with_wait(MainPageLocators.ORDER_MODAL_WINDOW)
+        return title_modal_window.is_displayed()
+
+    @allure.step("Закрытие окна заказа")
+    def close_order_window(self):
+        close_button = self.find_element_with_wait(MainPageLocators.CLOSE_MODAL_ORDER_WINDOW_BUTTON)
+        self.click_on_element_js(close_button)
+
+    @allure.step("Получение номера заказа")
+    def get_order_number(self):
+        initial_value = '9999'
+        self.wait_for_text_to_change(MainPageLocators.ORDER_NUMBER, initial_value)
+        return self.get_text_from_element(MainPageLocators.ORDER_NUMBER)

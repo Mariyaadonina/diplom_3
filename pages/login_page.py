@@ -1,41 +1,34 @@
 import allure
 
-from data import URLs
-from locators.login_page_locators import LoginPageLocators
 from pages.base_page import BasePage
-
+from locators.login_page_locators import LoginPageLocators
 
 class LoginPage(BasePage):
-    def __init__(self, web_driver):
-        super().__init__(web_driver)
-        self.URL = URLs.LOGIN_PAGE
 
-    @allure.step('Открываем страницу авторизации')
-    def open_login_page(self):
-        self.open_page(URLs.LOGIN_PAGE)
+    @allure.title('Клик по кнопке войти')
+    def click_on_login_button(self):
+        login_button = self.wait_for_element_to_be_clickable(LoginPageLocators.LOGIN_BUTTON)
+        self.click_on_element_js(login_button)
 
-    @allure.step('Дожидаемся полной загрузки страницы')
-    def wait_loading_page(self):
-        self.wait_visibility(LoginPageLocators.ENTER_BUTTON)
+    @allure.title('Ввод логина и пароля')
+    def input_email_and_password(self, create_user_and_get_creds):
+        # Проверяем, является ли create_user_and_get_creds кортежем с одним элементом
+        if isinstance(create_user_and_get_creds, tuple):
+            user_data = create_user_and_get_creds[0]  # Если кортеж, извлекаем первый элемент
+        else:
+            user_data = create_user_and_get_creds  # Если словарь, то сразу берем его
 
-    @allure.step('Нажимаем на ссылку "Восстановить пароль"')
-    def click_link_recovery_password(self):
-        self.click_element(LoginPageLocators.PASS_RECOVERY_LINK)
+        email = user_data['email']
+        password = user_data['password']
 
-    @allure.step('Заполняем поле E-mail {email}')
-    def fill_email_field(self, email):
-        self.fill_field(LoginPageLocators.EMAIL_FIELD, email)
+        email_input = self.find_element_with_wait(LoginPageLocators.INPUT_NAME)
+        password_input = self.find_element_with_wait(LoginPageLocators.INPUT_PASSWORD)
+        email_input.send_keys(email)
+        password_input.send_keys(password)
 
-    @allure.step('Заполняем поле Password {password}')
-    def fill_password_field(self, password):
-        self.fill_field(LoginPageLocators.PASSWORD_FIELD, password)
-
-    @allure.step('Нажимаем на кнопку "Войти"')
-    def click_button_enter(self):
-        self.click_element(LoginPageLocators.ENTER_BUTTON)
-
-    @allure.step('Логинимся')
-    def logining_user(self, login_details):
-        self.fill_email_field(login_details['email'])
-        self.fill_password_field(login_details['password'])
-        self.click_button_enter()
+    @allure.title('Клик на кнопку "Восстановить пароль"')
+    def click_on_button_password_recovery(self):
+        recovery_button = self.find_element_with_wait(LoginPageLocators.PASSWORD_RECOVERY)
+        self.click_on_element_js(recovery_button)
+        current_url = self.current_url()
+        return current_url

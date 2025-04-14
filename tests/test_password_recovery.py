@@ -1,40 +1,41 @@
 import allure
+from pages.login_page import LoginPage
+from pages.main_page import MainPage
+from pages.password_recovery_page import PasswordRecoveryPage
+from pages.reset_password_page import ResetPasswordPage
+from config import FORGOT_PASS_PAGE, RESET_PASS_PAGE
 
-
-@allure.suite('Восстановление пароля')
 class TestPasswordRecovery:
 
-    @allure.title('Переход на страницу восстановления пароля')
-    @allure.description('Проверка перехода на страницу восстановления пароля по кнопке «Восстановить пароль»')
-    def test_navigate_to_password_recovery_page(self, login_page, forgot_password_page):
-        login_page.open_login_page()
-        login_page.click_link_recovery_password()
-        with allure.step(f'Проверяем переход на url {forgot_password_page.URL})'):
-            assert login_page.current_url == forgot_password_page.URL, \
-                (f'Ожидался переход на страницу {forgot_password_page.URL}, '
-                 f'но фактический URL: {login_page.current_url}')
+    @allure.title('переход на страницу восстановления пароля по кнопке «Восстановить пароль»')
+    def test_click_on_recover_password_button_successful(self, driver, create_user_and_get_creds):
+        main_page = MainPage(driver)
+        main_page.click_on_login_button()
+        login_page = LoginPage(driver)
+        current_url = login_page.click_on_button_password_recovery()
+        assert current_url == FORGOT_PASS_PAGE
 
-    @allure.title('Восстановление пароля с вводом почты')
-    @allure.description('Проверка ввода почты и клика по кнопке «Восстановить»')
-    def test_recover_password_with_email(self, forgot_password_page, reset_password_page, create_user):
-        forgot_password_page.open_forgot_password_page()
-        forgot_password_page.fill_email_field(create_user['email'])
-        forgot_password_page.click_button_recovery()
-        reset_password_page.wait_load_page()
-        with allure.step(f'Проверяем переход на url {reset_password_page.URL})'):
-            assert forgot_password_page.current_url == reset_password_page.URL, \
-                (f'Ожидался переход на страницу {reset_password_page.URL}, '
-                 f'но фактический URL: {forgot_password_page.current_url}')
+    @allure.title('ввод почты и клик по кнопке «Восстановить»')
+    def test_input_email_and_click_button_recover(self, driver, create_user_and_get_creds):
+        user_data = create_user_and_get_creds[0]
+        main_page = MainPage(driver)
+        main_page.click_on_login_button()
+        login_page = LoginPage(driver)
+        login_page.click_on_button_password_recovery()
+        password_recovery = PasswordRecoveryPage(driver)
+        password_recovery.input_email(user_data)
+        current_url = password_recovery.click_on_button_recovery(RESET_PASS_PAGE)
+        assert current_url == RESET_PASS_PAGE
 
-    @allure.title('Активация поля пароля при клике на кнопку показать/скрыть')
-    @allure.description('Проверка, что клик по кнопке показать/скрыть пароль делает поле активным')
-    def test_password_field_activation(self, forgot_password_page, reset_password_page, create_user):
-        forgot_password_page.open_forgot_password_page()
-        forgot_password_page.fill_email_field(create_user['email'])
-        forgot_password_page.click_button_recovery()
-        border = reset_password_page.get_password_field
-        reset_password_page.click_icon_in_field_password()
-        with allure.step(f'Проверяем активность поля с паролем'):
-            assert 'input_status_active' in border.get_attribute('class'), \
-                (f'Ожидалось, что поле ввода пароля будет активным, но вместо класса input_status_active'
-                 f'имеем фактические классы: {border.get_attribute("class")}')
+    @allure.title('клик по кнопке показать/скрыть пароль делает поле активным — подсвечивает его.')
+    def test_click_on_eye_button(self, driver, create_user_and_get_creds):
+        main_page = MainPage(driver)
+        main_page.click_on_login_button()
+        login_page = LoginPage(driver)
+        login_page.click_on_button_password_recovery()
+        password_recovery = PasswordRecoveryPage(driver)
+        password_recovery.input_email(create_user_and_get_creds[0])
+        password_recovery.click_on_button_recovery(RESET_PASS_PAGE)
+        reset_password = ResetPasswordPage(driver)
+        reset_password.click_on_eye_button()
+        assert reset_password.is_password_visible

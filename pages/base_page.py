@@ -1,56 +1,56 @@
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.support.wait import WebDriverWait as DrvWait
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from seletools.actions import drag_and_drop
 
-
 class BasePage:
-    DEFAULT_TIMEOUT = 10
-    LOADING_ANIMATION = By.XPATH, "//*[@alt='loading animation']/parent::div"
 
-    def __init__(self, web_driver):
-        self.web_driver = web_driver
-
-    @property
-    def current_url(self):
-        return self.web_driver.current_url
-
-    def wait_loading(self, timeout=DEFAULT_TIMEOUT):
-        DrvWait(self.web_driver, timeout).until(ec.invisibility_of_element(self.LOADING_ANIMATION))
+    def __init__(self, driver, default_timeout=10):
+        self.driver = driver
+        self.default_timeout = default_timeout
 
     def open_page(self, url):
-        self.web_driver.get(url)
-        self.wait_loading()
+        self.driver.get(url)
 
-    def click_element(self, locator, timeout=DEFAULT_TIMEOUT):
-        self.wait_loading()
-        DrvWait(self.web_driver, timeout).until(ec.element_to_be_clickable(locator)).click()
+    def find_element_with_wait(self, locator, timeout=None):
+        timeout = timeout or self.default_timeout
+        WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located(locator))
+        return self.driver.find_element(*locator)
 
-    def fill_field(self, locator, text, timeout=DEFAULT_TIMEOUT):
-        DrvWait(self.web_driver, timeout).until(ec.element_to_be_clickable(locator)).send_keys(text)
+    def find_elements_with_wait(self, locator, timeout=None):
+        timeout = timeout or self.default_timeout
+        WebDriverWait(self.driver, timeout).until(EC.presence_of_all_elements_located(locator))
+        return self.driver.find_elements(*locator)
 
-    def wait_visibility(self, locator, timeout=DEFAULT_TIMEOUT):
-        DrvWait(self.web_driver, timeout).until(ec.visibility_of_element_located(locator))
+    def click_to_element(self, locator, timeout=None):
+        timeout = timeout or self.default_timeout
+        WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located(locator))
+        self.driver.find_element(*locator).click()
 
-    def get_attribute(self, locator, attribute, timeout=DEFAULT_TIMEOUT):
-        return (DrvWait(self.web_driver, timeout).
-                until(ec.visibility_of_element_located(locator)).get_attribute(attribute))
+    def click_on_element_js(self, locator):
+        self.driver.execute_script("arguments[0].click();", locator)
 
-    def is_element_exist(self, locator):
-        try:
-            self.web_driver.find_element(*locator)
-            return True
-        finally:
-            return False
+    def add_text_to_element(self, locator, text, timeout=None):
+        self.find_element_with_wait(locator, timeout).send_keys(text)
 
-    def get_element(self, locator):
-        return self.web_driver.find_element(*locator)
+    def get_text_from_element(self, locator, timeout=None):
+        return self.find_element_with_wait(locator, timeout).text
 
-    def get_visible_element(self, locator, timeout=DEFAULT_TIMEOUT):
-        return DrvWait(self.web_driver, timeout).until((ec.visibility_of_element_located(locator)))
+    def wait_url_to_be(self, url, timeout=None):
+        timeout = timeout or self.default_timeout
+        WebDriverWait(self.driver, timeout).until(EC.url_to_be(url))
 
-    def get_visible_elements(self, locator, timeout=DEFAULT_TIMEOUT):
-        return DrvWait(self.web_driver, timeout).until((ec.visibility_of_all_elements_located(locator)))
+    def current_url(self):
+        return self.driver.current_url
 
-    def drag_and_drop(self, source_drag, target_drop):
-        drag_and_drop(self.web_driver, source_drag, target_drop)
+    def wait_for_element_to_be_clickable(self, locator, timeout=None):
+        timeout = timeout or self.default_timeout
+        return WebDriverWait(self.driver, timeout).until(EC.element_to_be_clickable(locator))
+
+    def move_elements(self, source, target):
+        return drag_and_drop(self.driver, source, target)
+
+    def wait_for_text_to_change(self, locator, initial_value, timeout=None):
+        timeout = timeout or self.default_timeout
+        WebDriverWait(self.driver, timeout).until(
+            lambda driver: self.get_text_from_element(locator) != initial_value
+        )

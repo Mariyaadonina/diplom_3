@@ -1,23 +1,19 @@
 import allure
-
-from data import URLs
-from locators.reset_password_page_locators import ResetPasswordPageLocators
 from pages.base_page import BasePage
-
+from locators.reset_password_locators import ResetPasswordLocators
 
 class ResetPasswordPage(BasePage):
-    def __init__(self, web_driver):
-        super().__init__(web_driver)
-        self.URL = URLs.RESET_PASSWORD_PAGE
 
-    @property
-    def get_password_field(self):
-        return self.get_visible_element(ResetPasswordPageLocators.INACTIVE_PASSWORD_FIELD)
+    def input_password(self, create_user_and_get_creds):
+        email = create_user_and_get_creds['email']
+        email_input = self.find_element_with_wait(ResetPasswordLocators.RESET_PASSWORD_INPUT)
+        email_input.send_keys(email)
 
-    @allure.step('Дожидаемся загрузки страницы')
-    def wait_load_page(self):
-        self.wait_visibility(ResetPasswordPageLocators.EYE_INPUT_ICON)
+    def click_on_eye_button(self):
+        eye_button = self.find_element_with_wait(ResetPasswordLocators.EYE_BUTTON)
+        self.click_on_element_js(eye_button)
 
-    @allure.step('Клик на иконку показа пароля')
-    def click_icon_in_field_password(self):
-        self.click_element(ResetPasswordPageLocators.EYE_INPUT_ICON)
+    @allure.step("Проверка видимости пароля")
+    def is_password_visible(self):
+        password_input = self.find_element_with_wait(ResetPasswordLocators.RESET_PASSWORD_INPUT)
+        return password_input.get_attribute('type') == 'text'
